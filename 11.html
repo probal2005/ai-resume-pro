@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>AI Resume Pro | A4 Optimized + ATS Friendly</title>
+    <!-- PDF.js & Tesseract for file extraction -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(145deg, #eef2f9 0%, #d9e2ef 100%);
+            padding: 1.5rem;
+        }
+
+        .app-container {
+            max-width: 1500px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 2rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: #0f2b3d;
+            padding: 1rem 2rem;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .logo h1 {
+            font-size: 1.6rem;
+            background: linear-gradient(135deg, #c0e0ff, #7bc5ff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .status-badge {
+            background: #1e4a6e;
+            padding: 0.3rem 1rem;
+            border-radius: 30px;
+            font-size: 0.8rem;
+        }
+
+        .tabs-nav {
+            display: flex;
+            flex-wrap: wrap;
+            background: #f8fafd;
+            border-bottom: 1px solid #cfdfed;
+            padding: 0 1rem;
+            gap: 0.25rem;
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: none;
+            padding: 1rem 1.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 12px 12px 0 0;
+            transition: 0.2s;
+        }
+
+        .tab-btn.active {
+            background: white;
+            color: #0f4c81;
+            border-bottom: 3px solid #0f4c81;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 2rem;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fade 0.2s;
+        }
+
+        @keyframes fade {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .card-panel {
+            background: white;
+            border-radius: 1.5rem;
+            padding: 1.8rem;
+            margin-bottom: 2rem;
+            border: 1px solid #eef2f8;
+            box-shadow: 0 6px 14px rgba(0, 0, 0, 0.03);
+        }
+
+        .builder-two-col {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .builder-form {
+            flex: 1.4;
+            min-width: 320px;
+        }
+
+        .builder-preview {
+            flex: 1;
+            min-width: 300px;
+            background: #fefcf5;
+            border-radius: 1.5rem;
+            padding: 1.5rem;
+            border: 1px solid #e5d5b3;
+            position: sticky;
+            top: 1rem;
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+
+        .form-group {
+            margin-bottom: 1.2rem;
+        }
+
+        label {
+            font-weight: 600;
+            display: block;
+            margin-bottom: 0.4rem;
+            font-size: 0.85rem;
+            color: #2c3e50;
+        }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            padding: 0.7rem 1rem;
+            border: 1px solid #cbd5e1;
+            border-radius: 1rem;
+            font-size: 0.9rem;
+        }
+
+        button {
+            background: #0f4c81;
+            border: none;
+            padding: 0.7rem 1.5rem;
+            border-radius: 2rem;
+            font-weight: 600;
+            color: white;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        button:hover {
+            background: #1b5e9e;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #34495e;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid #0f4c81;
+            color: #0f4c81;
+        }
+
+        .skill-chip,
+        .lang-chip,
+        .cert-chip {
+            display: inline-flex;
+            align-items: center;
+            background: #eef2ff;
+            padding: 0.3rem 0.8rem;
+            border-radius: 30px;
+            margin: 0.2rem;
+            font-size: 0.8rem;
+            gap: 6px;
+        }
+
+        .skill-chip button,
+        .lang-chip button,
+        .cert-chip button {
+            background: none;
+            border: none;
+            color: #dc2626;
+            cursor: pointer;
+            font-size: 1rem;
+            padding: 0 4px;
+        }
+
+        .skills-container,
+        .languages-container,
+        .certs-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 6px;
+            border: 1px solid #e2e8f0;
+            padding: 8px;
+            border-radius: 1rem;
+            min-height: 60px;
+        }
+
+        .dynamic-block {
+            background: #f9fafc;
+            padding: 1rem;
+            border-radius: 1rem;
+            margin-bottom: 1rem;
+            border-left: 3px solid #0f4c81;
+            position: relative;
+        }
+
+        .block-remove {
+            background: #dc2626;
+            color: white;
+            border: none;
+            border-radius: 30px;
+            width: 28px;
+            height: 28px;
+            font-size: 1rem;
+            cursor: pointer;
+            float: right;
+            margin-bottom: 8px;
+        }
+
+        .profile-preview-sm {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #0f4c81;
+        }
+
+        .grid-2col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+        }
+
+        .file-zone {
+            border: 2px dashed #0f4c81;
+            background: #f0f7ff;
+            border-radius: 1rem;
+            padding: 1rem;
+            text-align: center;
+            cursor: pointer;
+            margin-bottom: 1rem;
+        }
+
+        .score-big {
+            font-size: 3rem;
+            font-weight: 800;
+            color: #0f4c81;
+            text-align: center;
+        }
+
+        .grid-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: linear-gradient(145deg, #ffffff, #f5f9ff);
+            padding: 1.2rem;
+            border-radius: 1.2rem;
+            text-align: center;
+            border: 1px solid #e2edf7;
+        }
+
+        .resume-item,
+        .cert-item {
+            background: #f9fbfe;
+            margin: 0.8rem 0;
+            padding: 1rem;
+            border-radius: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            border-left: 5px solid #0f4c81;
+        }
+
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #1f2f3e;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 40px;
+            z-index: 1000;
+        }
+
+        /* A4 OPTIMIZED RESUME STYLES (ATS-friendly, clean, scannable) */
+        .a4-resume {
+            width: 210mm;
+            min-height: 297mm;
+            margin: 0 auto;
+            background: white;
+            padding: 8mm 10mm;
+            font-family: 'Inter', 'Segoe UI', 'Arial', sans-serif;
+            font-size: 11pt;
+            line-height: 1.4;
+            color: #1e2a3a;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .a4-resume h1 {
+            font-size: 24pt;
+            margin-bottom: 0.2rem;
+            font-weight: 700;
+            color: #0f2b3d;
+        }
+
+        .a4-resume h2 {
+            font-size: 14pt;
+            border-bottom: 2px solid #0f4c81;
+            margin: 0.6rem 0 0.4rem;
+            padding-bottom: 0.2rem;
+            color: #0f4c81;
+        }
+
+        .a4-resume h3 {
+            font-size: 12pt;
+            margin: 0.3rem 0 0.2rem;
+            font-weight: 600;
+        }
+
+        .a4-resume .contact-line {
+            font-size: 10pt;
+            color: #4a627a;
+            margin-bottom: 0.8rem;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 0.4rem;
+        }
+
+        .a4-resume .section {
+            margin-bottom: 0.6rem;
+        }
+
+        .a4-resume .job-title {
+            font-weight: 600;
+            font-size: 12pt;
+            color: #0f4c81;
+        }
+
+        .a4-resume .date-location {
+            font-size: 9pt;
+            color: #5a6e85;
+            float: right;
+        }
+
+        .a4-resume .skill-list,
+        .a4-resume .lang-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin: 0.2rem 0;
+        }
+
+        .a4-resume .skill-badge {
+            background: #eef2ff;
+            padding: 0.2rem 0.7rem;
+            border-radius: 20px;
+            font-size: 9pt;
+        }
+
+        .a4-resume .edu-item,
+        .exp-item,
+        .proj-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .a4-resume .edu-degree {
+            font-weight: 600;
+        }
+
+        .a4-resume .edu-institution {
+            font-style: italic;
+        }
+
+        .a4-resume ul {
+            margin-left: 1.2rem;
+            margin-top: 0.2rem;
+        }
+
+        .a4-resume li {
+            margin-bottom: 0.1rem;
+        }
+
+        @media print {
+            .a4-resume {
+                margin: 0;
+                box-shadow: none;
+                padding: 0;
+            }
+
+            .tab-btn,
+            button,
+            .file-zone,
+            .card-panel:not(.builder-preview) {
+                display: none;
+            }
+
+            .builder-preview {
+                background: white;
+                border: none;
+                padding: 0;
+                max-height: none;
+                overflow: visible;
+            }
+        }
+
+        @media (max-width: 800px) {
+            .builder-two-col {
+                flex-direction: column;
+            }
+
+            .builder-preview {
+                position: static;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app-container">
+        <div class="header">
+            <div class="logo">
+                <h1>✨ AI Resume Pro | A4 Optimized</h1>
+            </div>
+            <div class="status-badge">📄 ATS‑Friendly · One‑Page Ready</div>
+        </div>
+        <div class="tabs-nav">
+            <button class="tab-btn active" data-tab="builder">📄 Resume Builder Pro</button>
+            <button class="tab-btn" data-tab="ats">🤖 ATS + Certificate</button>
+            <button class="tab-btn" data-tab="certificates">🏅 Certificates</button>
+            <button class="tab-btn" data-tab="dashboard">📈 Dashboard</button>
+            <button class="tab-btn" data-tab="verify">🔍 Verify</button>
+        </div>
+
+        <!-- BUILDER TAB (with A4 preview) -->
+        <div id="builder" class="tab-content active">
+            <div class="card-panel">
+                <div class="builder-two-col">
+                    <div class="builder-form">
+                        <!-- same dynamic form as before, full content restored -->
+                        <div class="form-group"><label>Profile Picture</label><input type="file" id="profileImgUpload"
+                                accept="image/*"><img id="profilePreview" class="profile-preview-sm"
+                                style="margin-top:8px;"
+                                src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 24 24' fill='%23ccc'%3E%3Cpath d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/%3E%3C/svg%3E">
+                        </div>
+                        <div class="grid-2col">
+                            <div class="form-group"><label>Full Name *</label><input id="fullName"
+                                    placeholder="John Doe"></div>
+                            <div class="form-group"><label>Job Title</label><select id="jobTitleSelect">
+                                    <option value="">-- Select or custom --</option>
+                                    <option>Frontend Developer</option>
+                                    <option>Backend Developer</option>
+                                    <option>Full Stack Developer</option>
+                                    <option>Data Scientist</option>
+                                    <option>Product Manager</option>
+                                    <option>UI/UX Designer</option>
+                                    <option>DevOps Engineer</option>
+                                </select><input id="jobTitleCustom" placeholder="Or custom title"
+                                    style="margin-top:6px;"></div>
+                        </div>
+                        <div class="grid-2col">
+                            <div class="form-group"><label>Email *</label><input id="email"
+                                    placeholder="email@example.com"></div>
+                            <div class="form-group"><label>Phone with Code</label><select id="countryCode"
+                                    style="width:30%; display:inline-block;">
+                                    <option value="+1">🇺🇸 +1</option>
+                                    <option value="+44">🇬🇧 +44</option>
+                                    <option value="+91">🇮🇳 +91</option>
+                                    <option value="+880">🇧🇩 +880</option>
+                                    <option value="+61">🇦🇺 +61</option>
+                                </select><input id="phone" placeholder="Phone number"
+                                    style="width:65%; display:inline-block;"></div>
+                        </div>
+                        <div class="form-group"><label>Location (Country → City → Zone)</label><select
+                                id="countrySelect">
+                                <option value="">Select Country</option>
+                                <option value="USA">USA</option>
+                                <option value="India">India</option>
+                                <option value="Bangladesh">Bangladesh</option>
+                                <option value="UK">UK</option>
+                            </select><select id="citySelect" style="margin-top:6px;">
+                                <option value="">Select City</option>
+                            </select><input id="zoneInput" placeholder="District / Upazila / Zone"
+                                style="margin-top:6px;"></div>
+                        <div class="form-group"><label>Professional Summary</label><textarea id="summary" rows="2"
+                                placeholder="Brief bio..."></textarea></div>
+                        <div class="form-group"><label>Skills (add one by one, max 6)</label>
+                            <div style="display:flex; gap:6px;"><input id="skillInput" placeholder="e.g., React"
+                                    style="flex:1;"><button id="addSkillBtn" class="btn-outline" type="button">+
+                                    Add</button></div>
+                            <div id="skillsContainer" class="skills-container"></div><small id="skillLimitMsg"
+                                style="color:#e67e22; display:none;">Max 6 skills</small>
+                        </div>
+                        <div class="form-group"><label>Education</label>
+                            <div id="educationList"></div><button id="addEducationBtn" class="btn-outline"
+                                type="button">+ Add Education</button>
+                        </div>
+                        <div class="form-group"><label>Work Experience</label>
+                            <div id="experienceList"></div><button id="addExperienceBtn" class="btn-outline"
+                                type="button">+ Add Experience</button>
+                        </div>
+                        <div class="form-group"><label>Projects</label>
+                            <div id="projectsList"></div><button id="addProjectBtn" class="btn-outline" type="button">+
+                                Add Project</button>
+                        </div>
+                        <div class="form-group"><label>Languages (chip)</label>
+                            <div style="display:flex; gap:6px;"><input id="langInput" placeholder="e.g., English"
+                                    style="flex:1;"><button id="addLangBtn" class="btn-outline">+ Add</button></div>
+                            <div id="languagesContainer" class="skills-container"></div>
+                        </div>
+                        <div class="form-group"><label>Certifications (chip)</label>
+                            <div style="display:flex; gap:6px;"><input id="certInput" placeholder="e.g., AWS Certified"
+                                    style="flex:1;"><button id="addCertBtn" class="btn-outline">+ Add</button></div>
+                            <div id="certsContainer" class="skills-container"></div>
+                        </div>
+                        <div style="display: flex; gap: 12px; margin-top: 20px;"><button id="saveResumeBtn">💾 Save
+                                Resume</button><button id="clearFormBtn" class="btn-secondary">🗑 Clear Form</button>
+                        </div>
+                    </div>
+                    <!-- A4 Preview Panel -->
+                    <div class="builder-preview">
+                        <h3>📄 A4 Resume Preview <button id="exportPreviewPDFBtn" class="btn-secondary"
+                                style="font-size:0.8rem; margin-left:10px;">📄 Export PDF (A4)</button></h3>
+                        <div id="livePreviewContainer"
+                            style="overflow-x: auto; background: #eef2f9; padding: 8px; border-radius: 12px;">
+                            <div id="livePreview" class="a4-resume"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-panel">
+                <h3>📋 Saved Resumes (Edit | PDF A4)</h3>
+                <div id="resumesList"></div>
+            </div>
+        </div>
+
+        <!-- ATS, CERTIFICATES, DASHBOARD, VERIFY (same as before, with template support) -->
+        <div id="ats" class="tab-content">
+            <div class="card-panel">
+                <h2>🤖 ATS Analyzer + Certificate Templates</h2>
+                <div class="file-zone" id="dropZone">
+                    <p>📂 Click or drag file (PDF/PNG/JPG)</p><input type="file" id="fileInput" accept=".pdf,image/*"
+                        style="display:none;"><button id="chooseFileBtn" class="btn-secondary">Select File</button>
+                    <div id="fileInfo"></div>
+                </div>
+                <div class="grid-2col"><input id="candName" placeholder="Full name"><select id="jobRoleSelect">
+                        <option>Student</option>
+                        <option>Frontend Developer</option>
+                        <option>Backend Developer</option>
+                        <option>Full Stack Developer</option>
+                        <option>Data Analyst</option>
+                        <option>Software Engineer</option>
+                    </select></div><select id="certTemplateSelect" style="margin:1rem 0;">
+                    <option value="gold">🏅 Classic Gold</option>
+                    <option value="blue">💙 Modern Blue</option>
+                    <option value="green">🌿 Elegant Green</option>
+                </select><textarea id="resumeText" rows="5"></textarea><button id="analyzeBtn">Analyze & Generate
+                    Certificate</button>
+                <div id="atsResultArea">
+                    <div class="score-big" id="scoreDisplay">--/100</div>
+                    <div id="atsDetails"></div>
+                    <div id="certPreviewAuto"></div>
+                </div>
+            </div>
+        </div>
+        <div id="certificates" class="tab-content">
+            <div class="card-panel">
+                <h2>🏅 Certificates</h2>
+                <div id="certsList"></div>
+            </div>
+        </div>
+        <div id="dashboard" class="tab-content">
+            <div class="grid-stats">
+                <div class="stat-card">
+                    <h3>📄 Resumes</h3>
+                    <p id="statRes">0</p>
+                </div>
+                <div class="stat-card">
+                    <h3>⭐ Avg ATS</h3>
+                    <p id="statAvg">0</p>
+                </div>
+                <div class="stat-card">
+                    <h3>🏅 Certificates</h3>
+                    <p id="statCert">0</p>
+                </div>
+                <div class="stat-card">
+                    <h3>📊 Analyses</h3>
+                    <p id="statAna">0</p>
+                </div>
+            </div>
+            <div class="card-panel">
+                <h3>Recent Resumes</h3>
+                <div id="dashResumes"></div>
+            </div>
+            <div class="card-panel">
+                <h3>Recent Certificates</h3>
+                <div id="dashCerts"></div>
+            </div>
+        </div>
+        <div id="verify" class="tab-content">
+            <div class="card-panel">
+                <h2>🔍 Verify Certificate</h2><input id="verifyCertId" placeholder="Certificate ID"><button
+                    id="verifyBtn">Verify</button>
+                <div id="verifyResult"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ---------- ALL PREVIOUS STATE & HELPERS (preserved) ----------
+        let certificates = [], resumes = [], atsHistory = [];
+        let skillsArray = [], languagesArray = [], certsArray = [];
+        let educationBlocks = [], experienceBlocks = [], projectsBlocks = [];
+        let currentProfileBase64 = "";
+        function loadData() { const c = localStorage.getItem("certificates"); if (c) certificates = JSON.parse(c); const r = localStorage.getItem("resumes"); if (r) resumes = JSON.parse(r); const h = localStorage.getItem("atsHistory"); if (h) atsHistory = JSON.parse(h); }
+        function saveData() { localStorage.setItem("certificates", JSON.stringify(certificates)); localStorage.setItem("resumes", JSON.stringify(resumes)); localStorage.setItem("atsHistory", JSON.stringify(atsHistory)); }
+        loadData();
+        function showToast(msg, isErr = false) { const t = document.createElement('div'); t.className = 'notification'; t.innerText = msg; t.style.background = isErr ? '#b91c1c' : '#0f4c81'; document.body.appendChild(t); setTimeout(() => t.remove(), 3000); }
+        function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m])); }
+
+        // Location cascade
+        const citiesByCountry = { USA: ["New York", "Los Angeles", "Chicago"], India: ["Mumbai", "Delhi", "Bangalore"], Bangladesh: ["Dhaka", "Chittagong", "Sylhet"], UK: ["London", "Manchester", "Birmingham"] };
+        document.getElementById("countrySelect").addEventListener("change", function () { const country = this.value; const citySelect = document.getElementById("citySelect"); citySelect.innerHTML = '<option value="">Select City</option>'; if (country && citiesByCountry[country]) citiesByCountry[country].forEach(c => { let opt = document.createElement("option"); opt.value = c; opt.textContent = c; citySelect.appendChild(opt); }); });
+
+        // Skills, Languages, Certs (chips) - same as before
+        function renderSkills() { const cont = document.getElementById("skillsContainer"); cont.innerHTML = ""; document.getElementById("skillLimitMsg").style.display = skillsArray.length >= 6 ? "block" : "none"; skillsArray.forEach((sk, i) => { const chip = document.createElement("div"); chip.className = "skill-chip"; chip.innerHTML = `${escapeHtml(sk)} <button data-skill-index="${i}">✖</button>`; cont.appendChild(chip); }); document.querySelectorAll("[data-skill-index]").forEach(btn => { btn.addEventListener("click", () => { skillsArray.splice(parseInt(btn.dataset.skillIndex), 1); renderSkills(); updateA4Preview(); }); }); updateA4Preview(); }
+        document.getElementById("addSkillBtn").addEventListener("click", () => { const inp = document.getElementById("skillInput"); if (inp.value.trim() && skillsArray.length < 6) { skillsArray.push(inp.value.trim()); inp.value = ""; renderSkills(); } else showToast(skillsArray.length >= 6 ? "Max 6 skills" : "Enter skill", true); });
+        function renderLanguages() { const cont = document.getElementById("languagesContainer"); cont.innerHTML = ""; languagesArray.forEach((l, i) => { const chip = document.createElement("div"); chip.className = "lang-chip"; chip.innerHTML = `${escapeHtml(l)} <button data-lang-index="${i}">✖</button>`; cont.appendChild(chip); }); document.querySelectorAll("[data-lang-index]").forEach(btn => { btn.addEventListener("click", () => { languagesArray.splice(parseInt(btn.dataset.langIndex), 1); renderLanguages(); updateA4Preview(); }); }); updateA4Preview(); }
+        document.getElementById("addLangBtn").addEventListener("click", () => { const inp = document.getElementById("langInput"); if (inp.value.trim()) { languagesArray.push(inp.value.trim()); inp.value = ""; renderLanguages(); } else showToast("Enter language", true); });
+        function renderCerts() { const cont = document.getElementById("certsContainer"); cont.innerHTML = ""; certsArray.forEach((c, i) => { const chip = document.createElement("div"); chip.className = "cert-chip"; chip.innerHTML = `${escapeHtml(c)} <button data-cert-index="${i}">✖</button>`; cont.appendChild(chip); }); document.querySelectorAll("[data-cert-index]").forEach(btn => { btn.addEventListener("click", () => { certsArray.splice(parseInt(btn.dataset.certIndex), 1); renderCerts(); updateA4Preview(); }); }); updateA4Preview(); }
+        document.getElementById("addCertBtn").addEventListener("click", () => { const inp = document.getElementById("certInput"); if (inp.value.trim()) { certsArray.push(inp.value.trim()); inp.value = ""; renderCerts(); } else showToast("Enter certification", true); });
+
+        // Education, Experience, Projects blocks (simplified)
+        function renderEducationBlocks() { const container = document.getElementById("educationList"); container.innerHTML = ""; educationBlocks.forEach((bl, idx) => { const div = document.createElement("div"); div.className = "dynamic-block"; div.innerHTML = `<button class="block-remove" data-edu-idx="${idx}">✖</button><div class="grid-2col"><input placeholder="Degree" value="${escapeHtml(bl.degree)}" data-edu-degree="${idx}"><input placeholder="Institution" value="${escapeHtml(bl.institution)}" data-edu-inst="${idx}"><input placeholder="Year" value="${escapeHtml(bl.year)}" data-edu-year="${idx}"><input placeholder="Grade" value="${escapeHtml(bl.grade)}" data-edu-grade="${idx}"><input placeholder="Subject" value="${escapeHtml(bl.subject)}" data-edu-subject="${idx}"><input placeholder="Description" value="${escapeHtml(bl.description)}" data-edu-desc="${idx}"></div>`; container.appendChild(div); }); attachEduEvents(); updateA4Preview(); }
+        function attachEduEvents() { document.querySelectorAll("[data-edu-degree]").forEach(inp => { const idx = parseInt(inp.dataset.eduDegree); inp.addEventListener("input", e => { educationBlocks[idx].degree = e.target.value; updateA4Preview(); }); }); /* similarly others */ document.querySelectorAll("[data-edu-inst],[data-edu-year],[data-edu-grade],[data-edu-subject],[data-edu-desc]").forEach(inp => { const attr = inp.getAttribute("data-edu-inst") ? "inst" : inp.getAttribute("data-edu-year") ? "year" : inp.getAttribute("data-edu-grade") ? "grade" : inp.getAttribute("data-edu-subject") ? "subject" : "desc"; const idx = parseInt(inp.dataset[attr == 'inst' ? 'eduInst' : attr == 'year' ? 'eduYear' : attr == 'grade' ? 'eduGrade' : attr == 'subject' ? 'eduSubject' : 'eduDesc']); inp.addEventListener("input", e => { if (attr == 'inst') educationBlocks[idx].institution = e.target.value; else if (attr == 'year') educationBlocks[idx].year = e.target.value; else if (attr == 'grade') educationBlocks[idx].grade = e.target.value; else if (attr == 'subject') educationBlocks[idx].subject = e.target.value; else educationBlocks[idx].description = e.target.value; updateA4Preview(); }); }); document.querySelectorAll("[data-edu-idx]").forEach(btn => { btn.addEventListener("click", e => { educationBlocks.splice(parseInt(btn.dataset.eduIdx), 1); renderEducationBlocks(); }); }); }
+        document.getElementById("addEducationBtn").addEventListener("click", () => { educationBlocks.push({ degree: "", institution: "", year: "", grade: "", subject: "", description: "" }); renderEducationBlocks(); });
+        function renderExperienceBlocks() { const cont = document.getElementById("experienceList"); cont.innerHTML = ""; experienceBlocks.forEach((bl, idx) => { const div = document.createElement("div"); div.className = "dynamic-block"; div.innerHTML = `<button class="block-remove" data-exp-idx="${idx}">✖</button><div class="grid-2col"><input placeholder="Title" value="${escapeHtml(bl.title)}" data-exp-title="${idx}"><input placeholder="Company" value="${escapeHtml(bl.company)}" data-exp-company="${idx}"><input placeholder="From" value="${escapeHtml(bl.from)}" data-exp-from="${idx}"><input placeholder="To" value="${escapeHtml(bl.to)}" data-exp-to="${idx}"><textarea placeholder="Description" rows="2" data-exp-desc="${idx}">${escapeHtml(bl.description)}</textarea></div>`; cont.appendChild(div); }); attachExpEvents(); updateA4Preview(); }
+        function attachExpEvents() { /* similar */ document.querySelectorAll("[data-exp-title],[data-exp-company],[data-exp-from],[data-exp-to],[data-exp-desc]").forEach(inp => { const key = inp.hasAttribute('data-exp-title') ? 'title' : inp.hasAttribute('data-exp-company') ? 'company' : inp.hasAttribute('data-exp-from') ? 'from' : inp.hasAttribute('data-exp-to') ? 'to' : 'description'; const idx = parseInt(inp.dataset[key == 'title' ? 'expTitle' : key == 'company' ? 'expCompany' : key == 'from' ? 'expFrom' : key == 'to' ? 'expTo' : 'expDesc']); inp.addEventListener("input", e => { experienceBlocks[idx][key] = e.target.value; updateA4Preview(); }); }); document.querySelectorAll("[data-exp-idx]").forEach(btn => { btn.addEventListener("click", e => { experienceBlocks.splice(parseInt(btn.dataset.expIdx), 1); renderExperienceBlocks(); }); }); }
+        document.getElementById("addExperienceBtn").addEventListener("click", () => { experienceBlocks.push({ title: "", company: "", from: "", to: "", description: "" }); renderExperienceBlocks(); });
+        function renderProjectsBlocks() { const cont = document.getElementById("projectsList"); cont.innerHTML = ""; projectsBlocks.forEach((bl, idx) => { const div = document.createElement("div"); div.className = "dynamic-block"; div.innerHTML = `<button class="block-remove" data-proj-idx="${idx}">✖</button><div class="grid-2col"><input placeholder="Name" value="${escapeHtml(bl.name)}" data-proj-name="${idx}"><input placeholder="Tech Stack" value="${escapeHtml(bl.tech)}" data-proj-tech="${idx}"><input placeholder="Link" value="${escapeHtml(bl.link)}" data-proj-link="${idx}"><textarea placeholder="Description" rows="2" data-proj-desc="${idx}">${escapeHtml(bl.description)}</textarea></div>`; cont.appendChild(div); }); attachProjEvents(); updateA4Preview(); }
+        function attachProjEvents() { document.querySelectorAll("[data-proj-name],[data-proj-tech],[data-proj-link],[data-proj-desc]").forEach(inp => { const key = inp.hasAttribute('data-proj-name') ? 'name' : inp.hasAttribute('data-proj-tech') ? 'tech' : inp.hasAttribute('data-proj-link') ? 'link' : 'description'; const idx = parseInt(inp.dataset[key == 'name' ? 'projName' : key == 'tech' ? 'projTech' : key == 'link' ? 'projLink' : 'projDesc']); inp.addEventListener("input", e => { projectsBlocks[idx][key] = e.target.value; updateA4Preview(); }); }); document.querySelectorAll("[data-proj-idx]").forEach(btn => { btn.addEventListener("click", e => { projectsBlocks.splice(parseInt(btn.dataset.projIdx), 1); renderProjectsBlocks(); }); }); }
+        document.getElementById("addProjectBtn").addEventListener("click", () => { projectsBlocks.push({ name: "", tech: "", link: "", description: "" }); renderProjectsBlocks(); });
+
+        // ---- A4 RESUME GENERATOR (ATS-friendly, single page) ----
+        function generateA4ResumeHTML() {
+            const name = document.getElementById("fullName").value.trim() || "Your Name";
+            const job = document.getElementById("jobTitleCustom").value.trim() || document.getElementById("jobTitleSelect").value || "Job Title";
+            const email = document.getElementById("email").value.trim() || "email@example.com";
+            const phoneCode = document.getElementById("countryCode").value;
+            const phoneNum = document.getElementById("phone").value;
+            const location = `${document.getElementById("countrySelect").value} ${document.getElementById("citySelect").value} ${document.getElementById("zoneInput").value}`.trim();
+            const summary = document.getElementById("summary").value.trim() || "";
+            const profileImg = currentProfileBase64 ? `<img src="${currentProfileBase64}" style="width:50px; height:50px; border-radius:50%; float:right; margin-left:10px;">` : "";
+
+            let skillsHtml = `<div class="skill-list">${skillsArray.map(s => `<span class="skill-badge">${escapeHtml(s)}</span>`).join('')}</div>`;
+            let langHtml = `<div class="skill-list">${languagesArray.map(l => `<span class="skill-badge">${escapeHtml(l)}</span>`).join('')}</div>`;
+            let certHtml = `<div class="skill-list">${certsArray.map(c => `<span class="skill-badge">${escapeHtml(c)}</span>`).join('')}</div>`;
+
+            let eduHtml = educationBlocks.map(e => `<div class="edu-item"><span class="edu-degree">${escapeHtml(e.degree)}</span> · <span class="edu-institution">${escapeHtml(e.institution)}</span> (${escapeHtml(e.year)})<br>${e.subject ? escapeHtml(e.subject) + ' · ' : ''}Grade: ${escapeHtml(e.grade)}<br><em>${escapeHtml(e.description)}</em></div>`).join('');
+            let expHtml = experienceBlocks.map(e => `<div class="exp-item"><strong>${escapeHtml(e.title)}</strong> at ${escapeHtml(e.company)} (${escapeHtml(e.from)} - ${escapeHtml(e.to)})<br>${escapeHtml(e.description)}</div>`).join('');
+            let projHtml = projectsBlocks.map(p => `<div class="proj-item"><strong>${escapeHtml(p.name)}</strong> (${escapeHtml(p.tech)})<br>${escapeHtml(p.description)} ${p.link ? `<a href="${escapeHtml(p.link)}" target="_blank">🔗</a>` : ''}</div>`).join('');
+
+            return `<div class="a4-resume">
+            ${profileImg}
+            <h1>${escapeHtml(name)}</h1>
+            <div class="job-title">${escapeHtml(job)}</div>
+            <div class="contact-line">📧 ${escapeHtml(email)} &nbsp; | &nbsp; 📞 ${phoneCode}${escapeHtml(phoneNum)} ${location ? `&nbsp; | &nbsp; 📍 ${escapeHtml(location)}` : ''}</div>
+            ${summary ? `<div class="section"><strong>Professional Summary</strong><br>${escapeHtml(summary)}</div>` : ''}
+            ${skillsArray.length ? `<div class="section"><strong>Skills</strong>${skillsHtml}</div>` : ''}
+            ${educationBlocks.length ? `<div class="section"><strong>Education</strong>${eduHtml}</div>` : ''}
+            ${experienceBlocks.length ? `<div class="section"><strong>Work Experience</strong>${expHtml}</div>` : ''}
+            ${projectsBlocks.length ? `<div class="section"><strong>Projects</strong>${projHtml}</div>` : ''}
+            ${languagesArray.length ? `<div class="section"><strong>Languages</strong>${langHtml}</div>` : ''}
+            ${certsArray.length ? `<div class="section"><strong>Certifications</strong>${certHtml}</div>` : ''}
+        </div>`;
+        }
+
+        function updateA4Preview() {
+            const previewDiv = document.getElementById("livePreview");
+            if (previewDiv) previewDiv.innerHTML = generateA4ResumeHTML();
+        }
+
+        // PDF Export (A4 exact)
+        async function exportA4ResumeToPDF(elementId, filename) {
+            const element = document.getElementById(elementId);
+            if (!element) return;
+            const canvas = await html2canvas(element, { scale: 2, backgroundColor: '#ffffff', useCORS: true });
+            const imgData = canvas.toDataURL('image/png');
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            const imgWidth = 210;
+            const imgHeight = (canvas.height * imgWidth) / canvas.width;
+            pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+            pdf.save(filename);
+            showToast(`PDF saved: ${filename}`);
+        }
+
+        // Save, Edit, Delete Resumes (with A4 PDF export)
+        function buildResumeObject(id = null) { return { id: id || Date.now().toString(), fullName: document.getElementById("fullName").value, jobTitle: document.getElementById("jobTitleCustom").value || document.getElementById("jobTitleSelect").value, email: document.getElementById("email").value, phoneCode: document.getElementById("countryCode").value, phone: document.getElementById("phone").value, country: document.getElementById("countrySelect").value, city: document.getElementById("citySelect").value, zone: document.getElementById("zoneInput").value, summary: document.getElementById("summary").value, skills: skillsArray, languages: languagesArray, certifications: certsArray, education: educationBlocks, experience: experienceBlocks, projects: projectsBlocks, profileImage: currentProfileBase64, createdAt: new Date().toISOString() }; }
+        function saveResume() { const newRes = buildResumeObject(); if (!newRes.fullName || !newRes.email) { showToast("Name & email required", true); return; } resumes.unshift(newRes); saveData(); renderResumes(); refreshDashboard(); showToast("Resume saved"); clearForm(); }
+        function clearForm() { document.getElementById("fullName").value = ""; document.getElementById("email").value = ""; document.getElementById("phone").value = ""; document.getElementById("summary").value = ""; document.getElementById("jobTitleSelect").value = ""; document.getElementById("jobTitleCustom").value = ""; skillsArray = []; languagesArray = []; certsArray = []; educationBlocks = []; experienceBlocks = []; projectsBlocks = []; currentProfileBase64 = ""; document.getElementById("profilePreview").src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 24 24' fill='%23ccc'%3E%3Cpath d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/%3E%3C/svg%3E"; renderSkills(); renderLanguages(); renderCerts(); renderEducationBlocks(); renderExperienceBlocks(); renderProjectsBlocks(); updateA4Preview(); }
+        function renderResumes() { const container = document.getElementById("resumesList"); if (!resumes.length) { container.innerHTML = "<p>No resumes</p>"; return; } let html = ""; resumes.forEach(r => { html += `<div class="resume-item"><div><b>${escapeHtml(r.fullName)}</b><br><small>${escapeHtml(r.email)}</small></div><div><button class="editResume" data-id="${r.id}" style="background:#28a745;">Edit</button><button class="pdfResumeBtn" data-id="${r.id}" style="background:#6c757d;">📄 PDF A4</button><button class="delResume" data-id="${r.id}" style="background:#dc2626;">Delete</button></div></div>`; }); container.innerHTML = html; document.querySelectorAll(".editResume").forEach(btn => btn.addEventListener("click", () => { const id = btn.dataset.id; const resume = resumes.find(r => r.id === id); if (resume) loadResumeToForm(resume); })); document.querySelectorAll(".pdfResumeBtn").forEach(btn => btn.addEventListener("click", async () => { const id = btn.dataset.id; const resume = resumes.find(r => r.id === id); if (resume) { const tempDiv = document.createElement('div'); tempDiv.style.position = 'absolute'; tempDiv.style.left = '-9999px'; tempDiv.style.top = '0'; tempDiv.innerHTML = generateSavedResumeHTML(resume); document.body.appendChild(tempDiv); await exportA4ResumeToPDF(tempDiv.id || (tempDiv.id = 'tempResumePDF'), `${resume.fullName}_resume.pdf`); document.body.removeChild(tempDiv); } })); document.querySelectorAll(".delResume").forEach(btn => btn.addEventListener("click", () => { if (confirm("Delete?")) { resumes = resumes.filter(r => r.id !== btn.dataset.id); saveData(); renderResumes(); refreshDashboard(); } })); }
+        function generateSavedResumeHTML(res) { return `<div class="a4-resume">${res.profileImage ? `<img src="${res.profileImage}" style="width:50px;height:50px;border-radius:50%;float:right;">` : ''}<h1>${escapeHtml(res.fullName)}</h1><div class="job-title">${escapeHtml(res.jobTitle)}</div><div class="contact-line">📧 ${escapeHtml(res.email)} &nbsp;| 📞 ${res.phoneCode}${escapeHtml(res.phone)} ${res.country ? `📍 ${res.country} ${res.city}` : ''}</div>${res.summary ? `<div class="section"><strong>Summary</strong><br>${escapeHtml(res.summary)}</div>` : ''}${res.skills.length ? `<div class="section"><strong>Skills</strong><div class="skill-list">${res.skills.map(s => `<span class="skill-badge">${escapeHtml(s)}</span>`).join('')}</div></div>` : ''}${res.education.length ? `<div class="section"><strong>Education</strong>${res.education.map(e => `<div><b>${escapeHtml(e.degree)}</b> from ${escapeHtml(e.institution)} (${e.year})<br>${e.subject ? e.subject + ', ' : ''}Grade: ${e.grade}<br><em>${escapeHtml(e.description)}</em></div>`).join('')}</div>` : ''}${res.experience.length ? `<div class="section"><strong>Work Experience</strong>${res.experience.map(e => `<div><b>${escapeHtml(e.title)}</b> at ${escapeHtml(e.company)} (${e.from}-${e.to})<br>${escapeHtml(e.description)}</div>`).join('')}</div>` : ''}${res.projects.length ? `<div class="section"><strong>Projects</strong>${res.projects.map(p => `<div><b>${escapeHtml(p.name)}</b> (${p.tech})<br>${escapeHtml(p.description)}</div>`).join('')}</div>` : ''}${res.languages.length ? `<div class="section"><strong>Languages</strong><div class="skill-list">${res.languages.map(l => `<span class="skill-badge">${escapeHtml(l)}</span>`).join('')}</div></div>` : ''}${res.certifications.length ? `<div class="section"><strong>Certifications</strong><div class="skill-list">${res.certifications.map(c => `<span class="skill-badge">${escapeHtml(c)}</span>`).join('')}</div></div>` : ''}</div>`; }
+        function loadResumeToForm(res) { clearForm(); document.getElementById("fullName").value = res.fullName || ""; document.getElementById("email").value = res.email || ""; document.getElementById("phone").value = res.phone || ""; document.getElementById("summary").value = res.summary || ""; document.getElementById("jobTitleSelect").value = res.jobTitle || ""; document.getElementById("jobTitleCustom").value = ""; if (res.jobTitle && !Array.from(document.getElementById("jobTitleSelect").options).some(o => o.value === res.jobTitle)) document.getElementById("jobTitleCustom").value = res.jobTitle; document.getElementById("countryCode").value = res.phoneCode || "+1"; document.getElementById("countrySelect").value = res.country || ""; document.getElementById("citySelect").value = res.city || ""; document.getElementById("zoneInput").value = res.zone || ""; skillsArray = res.skills || []; languagesArray = res.languages || []; certsArray = res.certifications || []; educationBlocks = res.education || []; experienceBlocks = res.experience || []; projectsBlocks = res.projects || []; currentProfileBase64 = res.profileImage || ""; document.getElementById("profilePreview").src = currentProfileBase64 || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 24 24' fill='%23ccc'%3E%3Cpath d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/%3E%3C/svg%3E"; renderSkills(); renderLanguages(); renderCerts(); renderEducationBlocks(); renderExperienceBlocks(); renderProjectsBlocks(); updateA4Preview(); showToast("Loaded for editing"); }
+        document.getElementById("saveResumeBtn").addEventListener("click", saveResume);
+        document.getElementById("clearFormBtn").addEventListener("click", clearForm);
+        document.getElementById("exportPreviewPDFBtn").addEventListener("click", async () => { await exportA4ResumeToPDF("livePreview", "resume_A4.pdf"); });
+
+        // ATS + Certificate logic (same as before, kept functional)
+        function computeATSScore(text, jobRole) { let t = text.toLowerCase(); let score = 0, tips = [], missing = []; if (/\S+@\S+\.\S+/.test(t)) score += 5; else tips.push("Add email"); if (/[0-9]{10}/.test(t)) score += 5; else tips.push("Add phone"); const sections = ["skills", "education", "experience", "project"]; let found = 0; sections.forEach(s => { if (t.includes(s)) found++; }); score += found * 5; if (found < 4) tips.push("Add all sections"); const roleMap = { "Frontend Developer": ["html", "css", "javascript", "react", "bootstrap", "tailwind"], "Backend Developer": ["node", "express", "mongodb", "sql", "api", "jwt"], "Full Stack Developer": ["html", "css", "javascript", "react", "node", "mongodb"], "Data Analyst": ["excel", "sql", "python", "tableau", "power bi"], "Software Engineer": ["java", "python", "sql", "oop", "git"], "Student": ["project", "internship", "communication", "teamwork"] }; let skills = roleMap[jobRole] || []; let matched = 0; skills.forEach(sk => { if (t.includes(sk)) matched++; else missing.push(sk); }); score += matched * 5; if (matched < 3) tips.push(`Add more ${jobRole} skills`); if (t.includes("project")) score += 8; else tips.push("Add projects"); if (t.includes("experience") || t.includes("intern")) score += 7; else tips.push("Add experience"); if (t.length > 400) score += 5; if (t.length > 800) score += 5; if (t.length < 250) tips.push("Resume too short"); if (!t.includes("asdf") && !t.includes("lorem")) score += 10; score = Math.min(100, score); let grade = score >= 90 ? "Excellent" : score >= 75 ? "Strong" : score >= 60 ? "Average" : score >= 40 ? "Weak" : "Poor"; return { score, grade, missingSkills: missing, tips }; }
+        async function generateCertificate(name, jobRole, score, grade, template) { const certId = "CERT-" + Date.now() + "-" + Math.floor(Math.random() * 10000); const newCert = { certId, name, jobRole, score, grade, createdAt: new Date().toISOString(), template }; certificates.unshift(newCert); saveData(); renderCertificates(); refreshDashboard(); return newCert; }
+        async function extractText(file) { if (file.type === 'application/pdf') { const buf = await file.arrayBuffer(); const pdf = await pdfjsLib.getDocument({ data: buf }).promise; let full = ""; for (let i = 1; i <= pdf.numPages; i++) { const page = await pdf.getPage(i); const txt = await page.getTextContent(); full += txt.items.map(t => t.str).join(' ') + "\n"; } return full.trim() || "No text found"; } else if (file.type.startsWith('image/')) { const url = URL.createObjectURL(file); const { data: { text } } = await Tesseract.recognize(url, 'eng'); URL.revokeObjectURL(url); return text.trim() || "OCR no text"; } else throw new Error("Unsupported"); }
+        const dropZone = document.getElementById("dropZone"), fileInput = document.getElementById("fileInput"), chooseBtn = document.getElementById("chooseFileBtn");
+        dropZone.addEventListener("click", () => fileInput.click()); dropZone.addEventListener("dragover", e => { e.preventDefault(); dropZone.style.background = "#e6f0ff"; }); dropZone.addEventListener("dragleave", () => dropZone.style.background = "#f0f7ff"); dropZone.addEventListener("drop", async e => { e.preventDefault(); dropZone.style.background = "#f0f7ff"; const f = e.dataTransfer.files[0]; if (f) await processFile(f); }); chooseBtn.addEventListener("click", () => fileInput.click()); fileInput.addEventListener("change", async e => { if (e.target.files.length) await processFile(e.target.files[0]); });
+        async function processFile(file) { if (file.size > 200 * 1024 * 1024) { showToast("Max 200MB", true); return; } document.getElementById("fileInfo").innerHTML = `⏳ Processing ${file.name}...`; try { const text = await extractText(file); document.getElementById("resumeText").value = text; document.getElementById("fileInfo").innerHTML = `✅ Extracted ${text.length} chars`; showToast("Text extracted"); } catch (err) { document.getElementById("fileInfo").innerHTML = `❌ Error`; showToast(err.message, true); } }
+        async function analyzeAndCertify() { const resumeText = document.getElementById("resumeText").value, jobRole = document.getElementById("jobRoleSelect").value, candName = document.getElementById("candName").value.trim(), template = document.getElementById("certTemplateSelect").value; if (!resumeText || !candName) { showToast("Provide resume text and candidate name", true); return; } const { score, grade, missingSkills, tips } = computeATSScore(resumeText, jobRole); document.getElementById("scoreDisplay").innerHTML = `${score}/100`; document.getElementById("atsDetails").innerHTML = `<h4>Grade: ${grade}</h4><strong>Missing Skills:</strong> ${missingSkills.join(", ") || "None"}<br><strong>Tips:</strong><ul>${tips.map(t => `<li>${t}</li>`).join("")}</ul>`; atsHistory.unshift({ score, role: jobRole, date: new Date().toISOString() }); saveData(); const newCert = await generateCertificate(candName, jobRole, score, grade, template); renderProfessionalCertificate(newCert, document.getElementById("certPreviewAuto"), template); refreshDashboard(); renderCertificates(); showToast(`Certificate: ${newCert.certId}`); }
+        function renderProfessionalCertificate(cert, container, template = 'gold') { const verifyLink = `${window.location.origin}${window.location.pathname}?verifyId=${cert.certId}`; const dateIssued = new Date(cert.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }); const qrId = `qr-${cert.certId.replace(/[^a-z0-9]/gi, '')}`; let style = ''; if (template === 'gold') style = 'border-color:#c9a03d; background:#fffef7; --primary:#b8860b; --ribbon:linear-gradient(90deg,#b8860b,#ffd700,#b8860b); --badge:radial-gradient(circle,#ffd966,#b8860b);'; else if (template === 'blue') style = 'border-color:#1e6f9f; background:#f0f8ff; --primary:#1e6f9f; --ribbon:linear-gradient(90deg,#1e6f9f,#4aa3df,#1e6f9f); --badge:radial-gradient(circle,#4aa3df,#1e6f9f);'; else if (template === 'green') style = 'border-color:#2d6a4f; background:#f4faf7; --primary:#2d6a4f; --ribbon:linear-gradient(90deg,#2d6a4f,#74c69d,#2d6a4f); --badge:radial-gradient(circle,#74c69d,#2d6a4f);'; const html = `<div class="certificate-wrapper"><div class="certificate" style="${style}"><div class="certificate-ribbon" style="background:var(--ribbon);">⭐ CERTIFICATE OF EXCELLENCE ⭐</div><div class="certificate-qr-top-left" id="${qrId}"><div style="width:90px; height:90px;" id="${qrId}-qr"></div><p>Scan to Verify</p></div><div class="certificate-badge" style="background:var(--badge);">🏅</div><div style="text-align:center;"><div class="certificate-title" style="color:var(--primary); border-bottom-color:var(--primary);">AI RESUME PRO</div><div class="certificate-subtitle">Official ATS Performance Recognition</div></div><div class="certificate-recipient" style="color:var(--primary); border-color:var(--primary);">${escapeHtml(cert.name)}</div><div class="certificate-details">Has successfully completed the ATS evaluation for the role of <strong>${escapeHtml(cert.jobRole)}</strong><br>achieving an outstanding score of <div class="certificate-score" style="color:var(--primary);">${cert.score} / 100</div>with grade: <strong>${cert.grade}</strong></div><div class="certificate-footer"><div class="signature-area"><div class="signature-icon">✍️</div><div class="signature-line"></div><div>Authorized Signatory</div><div style="font-size:0.7rem;">AI Resume Council</div></div><div class="signature-area"><div>📅 ${dateIssued}</div><div class="certificate-id">ID: ${cert.certId}</div></div></div></div><div style="text-align:center; margin-top:1rem;"><button onclick="window.print();" class="btn-secondary">📄 Save as PDF</button></div></div>`; container.innerHTML = html; setTimeout(() => { const qrDiv = document.getElementById(`${qrId}-qr`); if (qrDiv) new QRCode(qrDiv, { text: verifyLink, width: 90, height: 90 }); }, 50); }
+        function renderCertificates() { const container = document.getElementById("certsList"); if (!certificates.length) { container.innerHTML = "<p>No certificates yet.</p>"; return; } let html = ""; certificates.forEach(c => { html += `<div class="cert-item"><div><b>${escapeHtml(c.name)}</b> (${c.jobRole})<br>Score: ${c.score} | ${c.grade}<br>ID: ${c.certId}</div><button class="viewCertBtn" data-id="${c.certId}" data-template="${c.template || 'gold'}" style="background:#1e4a6e;">🔍 View</button></div>`; }); container.innerHTML = html; document.querySelectorAll(".viewCertBtn").forEach(btn => btn.addEventListener("click", () => { const id = btn.dataset.id; const cert = certificates.find(c => c.certId === id); if (cert) { const previewDiv = document.createElement('div'); renderProfessionalCertificate(cert, previewDiv, cert.template || 'gold'); container.appendChild(previewDiv); previewDiv.scrollIntoView({ behavior: 'smooth' }); } })); }
+        function refreshDashboard() { document.getElementById("statRes").innerText = resumes.length; let avg = 0; if (atsHistory.length) avg = Math.round(atsHistory.reduce((a, b) => a + b.score, 0) / atsHistory.length); document.getElementById("statAvg").innerText = avg; document.getElementById("statCert").innerText = certificates.length; document.getElementById("statAna").innerText = atsHistory.length; document.getElementById("dashResumes").innerHTML = resumes.slice(0, 3).map(r => `<div class="resume-item">${escapeHtml(r.fullName)} - ${r.email}</div>`).join("") || "<p>None</p>"; document.getElementById("dashCerts").innerHTML = certificates.slice(0, 3).map(c => `<div class="cert-item">${c.name} - ${c.score} pts</div>`).join("") || "<p>No certs</p>"; }
+        function verifyCertificate() { const id = document.getElementById("verifyCertId").value.trim(); if (!id) { showToast("Enter ID", true); return; } const cert = certificates.find(c => c.certId === id); const resDiv = document.getElementById("verifyResult"); if (cert) resDiv.innerHTML = `<div style="background:#e6f7e6; padding:1rem; border-radius:1rem;"><h2 style="color:green;">✅ VALID</h2><p><strong>Name:</strong> ${escapeHtml(cert.name)}<br><strong>Role:</strong> ${cert.jobRole}<br><strong>Score:</strong> ${cert.score}<br><strong>Grade:</strong> ${cert.grade}<br><strong>ID:</strong> ${cert.certId}</p></div>`; else resDiv.innerHTML = `<div style="background:#ffe0db; padding:1rem;"><h2 style="color:red;">❌ INVALID</h2></div>`; }
+        document.getElementById("analyzeBtn").addEventListener("click", analyzeAndCertify);
+        document.getElementById("verifyBtn").addEventListener("click", verifyCertificate);
+        function initTabs() { document.querySelectorAll(".tab-btn").forEach(btn => { btn.addEventListener("click", () => { const id = btn.dataset.tab; document.querySelectorAll(".tab-content").forEach(t => t.classList.remove("active")); document.getElementById(id).classList.add("active"); document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active")); btn.classList.add("active"); if (id === "builder") renderResumes(); if (id === "certificates") renderCertificates(); if (id === "dashboard") refreshDashboard(); }); }); }
+        initTabs(); renderResumes(); renderCertificates(); refreshDashboard(); updateA4Preview();
+        document.getElementById("profileImgUpload").addEventListener("change", (e) => { if (e.target.files[0]) { const rd = new FileReader(); rd.onload = ev => { currentProfileBase64 = ev.target.result; document.getElementById("profilePreview").src = currentProfileBase64; updateA4Preview(); }; rd.readAsDataURL(e.target.files[0]); } });
+        document.querySelectorAll("#fullName, #email, #phone, #summary, #jobTitleSelect, #jobTitleCustom, #countryCode, #countrySelect, #citySelect, #zoneInput").forEach(el => el.addEventListener("input", updateA4Preview));
+        if (window.location.search.includes("verifyId")) setTimeout(() => { document.querySelector(".tab-btn[data-tab='verify']").click(); const params = new URLSearchParams(window.location.search); const q = params.get("verifyId"); if (q) { document.getElementById("verifyCertId").value = q; verifyCertificate(); } }, 150);
+    </script>
+</body>
+
+</html>
